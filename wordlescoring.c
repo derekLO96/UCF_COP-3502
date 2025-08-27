@@ -1,4 +1,4 @@
-
+/*
 //  Derek Oliveira 
 //  UCDID: 5768501 
 //  08/20/2025
@@ -189,3 +189,4 @@ char** SetupWordleArray(int numberOfWords)
     return wordleSet;
 
 }
+*/
