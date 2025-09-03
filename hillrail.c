@@ -158,11 +158,10 @@ int** FormatMatrix(char* keyFileLocation , int* matrixSize)
         for(int j = 0 ; j < (*matrixSize) ; j++)
         {       
 
-            if(fscanf(keyMatrixFile , "%d " , &keyMatrixParsed[i][j]) != 1)
-            {
+            fscanf(keyMatrixFile , "%d " , &keyMatrixParsed[i][j]);            
             printf("%d\t" , keyMatrixParsed[i][j]);
             k++;
-            }
+            
         }
         printf("\t]\n");
 
@@ -217,7 +216,7 @@ EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocati
     EncryptedTextStruct finalCipherStruct = {"Noting"};
     HillCipherSecretStruct* hillCipherStruct;
 
-    int* matrixSize = 0; 
+    int* matrixSize; 
     char *plainText = FormatText(plainTextFileLocation);
     int **buildMatrix = FormatMatrix(keyFileLocation, matrixSize);
 
