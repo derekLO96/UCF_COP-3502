@@ -122,6 +122,8 @@ char *FormatText(char* plainTextFileLocation)
 /// @brief Takes the key matrix file location and parses the text to build the key matrix in a two dimensional key matrix
 /// @param keyFileLocation --> The location of the key matrix file
 /// @return --> a two dimentional array of keys
+/// @todo FIX LOGIC. currently reading one caracter at a time, but numbers over 9 are 2 characters long ex: 10 would
+/// read as 1 and 0 ... needs to be read as 10, one number.
 int **FormatMatrix(char* keyFileLocation , int* matrixSize)
 {
     
@@ -134,43 +136,53 @@ int **FormatMatrix(char* keyFileLocation , int* matrixSize)
     keyMatrixFileSize = GetFileSize(keyMatrixFile) + 1;
 
     char* keyMatrixText = malloc(keyMatrixFileSize);
-    char currentCharacter;
-
+    char currentCharacter;    
     int i = 0 , k = 0;
+    int* integerArray;
+
+    //FIX THIS
     while ((currentCharacter = fgetc(keyMatrixFile)) != EOF)
     {
         int integerFromCharacter = (currentCharacter - '0');
-        if (i == 0)
+        if(i == 0)
         {
+            integerArray = (int*) malloc((integerFromCharacter * integerFromCharacter) * sizeof(int));
 
-            keyMatrixParsed = calloc( integerFromCharacter , sizeof(int*));
+            keyMatrixParsed = (int**) malloc(integerFromCharacter * sizeof(int*));
 
-            for (int j = 0 ; j < integerFromCharacter ; j++)
-            {
+            for(int j = 0 ; j < integerFromCharacter ; j++) keyMatrixParsed[j] = (int*) malloc(sizeof(int));
 
-                keyMatrixParsed[j] = malloc(sizeof(int));
-
-            }
-            printf("\nsucessfully allocated memory : number %d\n" , integerFromCharacter);
+            (*matrixSize) = integerFromCharacter;
+            printf("\nDone Allocating memory ; MratrixSize: %d\n" , (*matrixSize));
             i++;
-
-        }
-        else
+        }else
         {
-
-            if(!(integerFromCharacter < 0) || !(integerFromCharacter > 9))
+            if( integerFromCharacter >=0 && integerFromCharacter <=9)
             {
-                keyMatrixParsed[i - 1][k] = integerFromCharacter;
-                k++;
+                integerArray[i-1] = integerFromCharacter; 
+                printf("\nWriting into array : [%d] value: %d\n", i-1 , integerFromCharacter);       
                 i++;
-            }
-
+            }   
         }
-
-
+        
     }
 
+    for(int i = 0 ; i < (*matrixSize) ; i++)
+    {
+        for(int j = 0 ; j < (*matrixSize) ; j++)
+        {
+            printf("\nwriting into 2d array location [%d] [%d] value: %d\n", i , j , integerArray[k]);
+            keyMatrixParsed[i][j] = integerArray[k];
+            k++;
+
+        }
+    }
+
+
     fclose(keyMatrixFile);
+    free(integerArray);
+
+    printf("\ndone...\n");
 
     return keyMatrixParsed;
 }
@@ -219,9 +231,13 @@ EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocati
 
 
 
-    //HillCipherSecretStruct builtHillCypherStruct = BuildHillCipherStruct(FormatText(plainTextFileLocation), FormatMatrix(keyFileLocation));
-    printf("%s" , formatedText);
+// @todo FIX SEGMENTATION FAULT ERROR AFTER FREEING MEM 
 
-    free(formatedText);
+    //HillCipherSecretStruct builtHillCypherStruct = BuildHillCipherStruct(FormatText(plainTextFileLocation), FormatMatrix(keyFileLocation));
+    //printf("%s" , formatedText);
+    printf("Freeing Memory...\n");
+    printf("freed formatedText");
+    free(formatedMatrix);
+    printf("freed formatedMatrix");
     return finalCipherStruct;
 }
