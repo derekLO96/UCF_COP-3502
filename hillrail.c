@@ -68,8 +68,8 @@ int* ConvertCharacterArrayToIntArray(char* characterArray);
 int main(int argc , char* argv[])
 {
     char* mode = argv[1];
-    char* plainTextFileLocation = argv[3] ;
     char* keyFileLocation = argv[2];
+    char* plainTextFileLocation = argv[3];    
     int rainWeight = atoi(argv[4]);
 
 
@@ -78,7 +78,7 @@ int main(int argc , char* argv[])
     
     
 
-    //printf("%s" , cipherText.encryptedText);
+    printf("%s" , cipherText.encryptedText);
 
 
     return 0;
@@ -230,7 +230,7 @@ EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocati
     int **buildMatrix = FormatMatrix(keyFileLocation, matrixSize);
 
     hillCipherStruct = BuildHillCipherStruct(plainText , buildMatrix , (*matrixSize));
-    int *convertedMatrix = ConvertCharacterArrayToIntArray(plainText);
+    //int *convertedMatrix = ConvertCharacterArrayToIntArray(plainText);
 
 
     printf("\nfreeing hillcipher Struct...\n");
@@ -265,13 +265,13 @@ EncryptedTextStruct PerformEncryption( HillCipherSecretStruct hillCipherStruct)
 }
 int* ConvertCharacterArrayToIntArray(char* characterArray)
 {
-    int* convertedArray = malloc(strlen(characterArray) * sizeof(int));
+    int* convertedArray;
     int stringLength = strlen(characterArray);
 
     printf("\nConverted character array: \n");
     for(int i = 0 ; i < stringLength ; i++)
     {
-        printf("%d " , (characterArray[i] - 65));
+        printf("%c " , characterArray[i] );
         //convertedArray[i] = (characterArray[i] - 65);
     }
 
