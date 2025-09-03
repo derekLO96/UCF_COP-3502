@@ -144,6 +144,7 @@ EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocati
     FILE* keyMatrixFile;
     long plainTextFileSize;
     long keyMatrixFileSize;
+    int endOfFile;
 
     plainTextFile = fopen(plainTextFileLocation , "r");
     keyMatrixFile = fopen(keyFileLocation , "r");
@@ -153,9 +154,9 @@ EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocati
 
     char* plainTextParsed = malloc(plainTextFileSize);
     char* keyMatrixText = malloc(keyMatrixFileSize);
-
-    fgets(plainTextParsed , plainTextFileSize, plainTextFile);
-    fgets(keyMatrixText , keyMatrixFileSize, keyMatrixFile);
+    
+    while(fgets(plainTextParsed , plainTextFileSize, plainTextFile)){}
+    while(fgets(keyMatrixText , keyMatrixFileSize, keyMatrixFile)){}
 
     HillCipherSecretStruct builtHillCypherStruct = BuildHillCipherStruct(
                                         FormatText(plainTextParsed), 
