@@ -57,6 +57,7 @@ typedef struct
 
 char* FormatText(char* plainText);
 int** FormatMatrix(char* matrixStringFromFile);
+long GetFileSize(FILE* file);
 HillCipherSecretStruct BuildHillCipherStruct(char* plainText , int** key);
 EncryptedTextStruct EncryptText(char* plainTextFileLocation , char* keyFileLocation);
 
@@ -67,12 +68,10 @@ int main(int argc , char* argv[])
     char* keyFileLocation = argv[2];
     int rainWeight = atoi(argv[4]);
 
-    if(strcmp(mode, "encrypt"))
-    {
 
-        EncryptedTextStruct cipherText = EncryptText(plainTextFileLocation , keyFileLocation);
+    EncryptedTextStruct cipherText = EncryptText(plainTextFileLocation , keyFileLocation);
 
-    }
+    
     
 
     //printf("%s" , cipherText.encryptedText);
@@ -143,19 +142,19 @@ EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocati
     EncryptedTextStruct finalCipherStruct;
     FILE* plainTextFile;
     FILE* keyMatrixFile;
-    long textFileSize;
+    long plainTextFileSize;
     long keyMatrixFileSize;
 
     plainTextFile = fopen(plainTextFileLocation , "r");
     keyMatrixFile = fopen(keyFileLocation , "r");
 
-    textFileSize = GetFileSize(plainTextFile) + 1;
+    plainTextFileSize = GetFileSize(plainTextFile) + 1;
     keyMatrixFileSize = GetFileSize(keyMatrixFile) + 1;
 
-    char* plainTextParsed = malloc(textFileSize);
+    char* plainTextParsed = malloc(plainTextFileSize);
     char* keyMatrixText = malloc(keyMatrixFileSize);
 
-    fgets(plainTextParsed , textFileSize, plainTextFile);
+    fgets(plainTextParsed , plainTextFileSize, plainTextFile);
     fgets(keyMatrixText , keyMatrixFileSize, keyMatrixFile);
 
     HillCipherSecretStruct builtHillCypherStruct = BuildHillCipherStruct(
