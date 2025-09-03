@@ -31,7 +31,6 @@ Due Date : September 12 th 2025
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 /// @brief Holds a formated plain text to be encrypted and key matrix.
 ///
@@ -55,8 +54,8 @@ typedef struct
 }EncryptedTextStruct;
 
 
-char* FormatText(char* plainText);
-int** FormatMatrix(char* matrixStringFromFile);
+char* FormatText(char* plainTextFileLocation);
+int** FormatMatrix(char* keyMatrixFileLocation , int* matrixSize);
 long GetFileSize(FILE* file);
 HillCipherSecretStruct BuildHillCipherStruct(char* plainText , int** key);
 EncryptedTextStruct EncryptText(char* plainTextFileLocation , char* keyFileLocation);
@@ -80,26 +79,98 @@ int main(int argc , char* argv[])
     return 0;
 }
 
-///@brief Takes in plain text and formats it into accepted format.
-///Only alphabetical letters are accepted, all lowercase letters are converted
-//to upper case, all other signs are ignored and deleted from the final string.
-///@param plainText --> plain text from a file
-///@return --> A formated string to especification
-char *FormatText(char *plainText)
+///@brief Takes in the plain text file location and parses the text into the correct format.
+///@param plainTextFileLocation --> Plain text file location
+///@return --> Formated text
+char *FormatText(char* plainTextFileLocation)
 {
-    char* plainTextParsed;
+    FILE* plainTextFile;
+    long plainTextFileSize;   
+
+    plainTextFile = fopen(plainTextFileLocation , "r");
+    plainTextFileSize = GetFileSize(plainTextFile) + 1;
+
+    char* plainTextParsed = malloc(plainTextFileSize);
+    char currentCharacter;
+    int i = 0;
+
+    while ((currentCharacter = fgetc(plainTextFile)) != EOF)
+    {
+       if(currentCharacter < 'A')
+       {        
+        //do nothing
+       }else if(currentCharacter >= 'a' && currentCharacter <= 'z')
+       {
+        plainTextParsed[i] = (currentCharacter - 32);
+        i++;
+       }else if(currentCharacter > 'z')
+       {
+        //do nothing
+       }else
+       {
+        plainTextParsed[i] = currentCharacter;
+        i++;
+       }
+
+    }
+
+    fclose(plainTextFile);
 
     return plainTextParsed;
 }
 
-/// @brief Takes in a string of integers from a file and formats it into a matrix that is acceptable
-///to make the matrix multiplication.
-/// @param matrixStringFromFile --> A string of integers
-/// @return --> formated matrix
-int **FormatMatrix(char *matrixStringFromFile)
+/// @brief Takes the key matrix file location and parses the text to build the key matrix in a two dimensional key matrix
+/// @param keyFileLocation --> The location of the key matrix file
+/// @return --> a two dimentional array of keys
+int **FormatMatrix(char* keyFileLocation , int* matrixSize)
 {
+    
     int** keyMatrixParsed;
 
+    FILE* keyMatrixFile;
+    long keyMatrixFileSize;
+    
+    keyMatrixFile = fopen(keyFileLocation , "r");
+    keyMatrixFileSize = GetFileSize(keyMatrixFile) + 1;
+
+    char* keyMatrixText = malloc(keyMatrixFileSize);
+    char currentCharacter;
+
+    int i = 0 , k = 0;
+    while ((currentCharacter = fgetc(keyMatrixFile)) != EOF)
+    {
+        int integerFromCharacter = (currentCharacter - '0');
+        if (i == 0)
+        {
+
+            keyMatrixParsed = calloc( integerFromCharacter , sizeof(int*));
+
+            for (int j = 0 ; j < integerFromCharacter ; j++)
+            {
+
+                keyMatrixParsed[j] = malloc(sizeof(int));
+
+            }
+            printf("\nsucessfully allocated memory : number %d\n" , integerFromCharacter);
+            i++;
+
+        }
+        else
+        {
+
+            if(!(integerFromCharacter < 0) || !(integerFromCharacter > 9))
+            {
+                keyMatrixParsed[i - 1][k] = integerFromCharacter;
+                k++;
+                i++;
+            }
+
+        }
+
+
+    }
+
+    fclose(keyMatrixFile);
 
     return keyMatrixParsed;
 }
@@ -122,6 +193,7 @@ HillCipherSecretStruct BuildHillCipherStruct(char *plainText, int **key)
 /// @return The size of the file as a long.
 long GetFileSize(FILE* file)
 {
+
     long fileSize;
 
     fseek(file , 0 , SEEK_END);
@@ -140,34 +212,16 @@ long GetFileSize(FILE* file)
 EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocation)
 {
     EncryptedTextStruct finalCipherStruct;
-    FILE* plainTextFile;
-    FILE* keyMatrixFile;
-    long plainTextFileSize;
-    long keyMatrixFileSize;
-    int endOfFile;
-
-    plainTextFile = fopen(plainTextFileLocation , "r");
-    keyMatrixFile = fopen(keyFileLocation , "r");
-
-    plainTextFileSize = GetFileSize(plainTextFile) + 1;
-    keyMatrixFileSize = GetFileSize(keyMatrixFile) + 1;
-
-    char* plainTextParsed = malloc(plainTextFileSize);
-    char* keyMatrixText = malloc(keyMatrixFileSize);
+    int* matrixSize; 
     
-    while(fgets(plainTextParsed , plainTextFileSize, plainTextFile)){}
-    while(fgets(keyMatrixText , keyMatrixFileSize, keyMatrixFile)){}
+    char* formatedText = FormatText(plainTextFileLocation);
+    int** formatedMatrix = FormatMatrix(keyFileLocation, matrixSize);
 
-    HillCipherSecretStruct builtHillCypherStruct = BuildHillCipherStruct(
-                                        FormatText(plainTextParsed), 
-                                              FormatMatrix(keyMatrixText));
 
-    printf("%s" , plainTextParsed);
-    printf("%s" , keyMatrixText);
 
-    fclose(plainTextFile);
-    fclose(keyMatrixFile);
-    free(plainTextParsed);
-    free(keyMatrixText);
+    //HillCipherSecretStruct builtHillCypherStruct = BuildHillCipherStruct(FormatText(plainTextFileLocation), FormatMatrix(keyFileLocation));
+    printf("%s" , formatedText);
+
+    free(formatedText);
     return finalCipherStruct;
 }
