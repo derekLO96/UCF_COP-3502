@@ -62,9 +62,10 @@ int** FormatMatrix(char* keyMatrixFileLocation , int matrixSize);
 long GetFileSize(FILE* file);
 HillCipherSecretStruct* BuildHillCipherStruct(char* plainText , int** key , int matrixSize);
 EncryptedTextStruct EncryptText(char* plainTextFileLocation , char* keyFileLocation);
-EncryptedTextStruct PerformEncryption( HillCipherSecretStruct* hillCipherStruct, int* convertedCharacterToInt);
+EncryptedTextStruct PerformEncryption( HillCipherSecretStruct* hillCipherStruct);
 int* ConvertCharacterArrayToIntArray(char* characterArray);
 int GetMatrixSize(char* keyFileLocation);
+EncryptedTextStruct PerformHillCipher(int* letterValueArray , int** key , int matrixSize);
 
 int main(int argc , char* argv[])
 {
@@ -222,8 +223,7 @@ EncryptedTextStruct EncryptText(char *plainTextFileLocation, char *keyFileLocati
     printf("%s" , plainText);
 
     printf("\nCipherText: \n");
-    int* convertedPlainToInt = ConvertCharacterArrayToIntArray(plainText);
-    EncryptedTextStruct finalCipherStruct = PerformEncryption(hillCipherStruct , convertedPlainToInt);
+    EncryptedTextStruct finalCipherStruct = PerformEncryption(hillCipherStruct);
 
 
 
@@ -251,9 +251,8 @@ int GetMatrixSize(char* keyFileLocation)
 
 }
 
-EncryptedTextStruct PerformEncryption( HillCipherSecretStruct* hillCipherStruct , int* convertedCharacterToInt)
+EncryptedTextStruct PerformEncryption( HillCipherSecretStruct* hillCipherStruct)
 {
-    EncryptedTextStruct encripedText;
 
     int matrixSize = hillCipherStruct->matrixSize;
     char* plainTextFormated = hillCipherStruct->plainTextFormated;
@@ -267,13 +266,22 @@ EncryptedTextStruct PerformEncryption( HillCipherSecretStruct* hillCipherStruct 
 
     }
 
-    int* letterValueArray[matrixSize * matrixSize];
+    int* letterValueArray = ConvertCharacterArrayToIntArray(plainTextFormated);
+    EncryptedTextStruct encripedText = PerformHillCipher(letterValueArray , key , matrixSize);
 
     for(int i = 0 ; i < matrixSize ; i++) free(letterArray[i]);
     free(letterArray);
     return encripedText;
 
 }
+
+EncryptedTextStruct PerformHillCipher(int* letterValueArray , int** key , int matrixSize)
+{
+    
+
+
+}
+
 int* ConvertCharacterArrayToIntArray(char* characterArray)
 {
     int* convertedArray = malloc((size_t) strlen(characterArray));
