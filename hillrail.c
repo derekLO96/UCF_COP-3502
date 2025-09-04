@@ -275,12 +275,14 @@ EncryptedTextStruct PerformEncryption( HillCipherSecretStruct* hillCipherStruct)
 
 }
 
+/*
+ *** FIX ME ***
 EncryptedTextStruct PerformHillCipher(int* letterValueArray , int** key , int matrixSize)
 {
-    
 
 
-}
+
+}*/
 
 int* ConvertCharacterArrayToIntArray(char* characterArray)
 {
