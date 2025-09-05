@@ -35,7 +35,7 @@ Player ** readPlayerPool(int *playerCount);
 char* getPuzzleTypePtr(char **puzzleTypes , int count , char*type);
 Player* getPlayerPtrByName(Player **playerPool , int playerCount, char *playerName);
 void printBestScorer(Puzzle *puzzle);
-void printMaxTotalScorer(Archive *archive);
+void printMaxTotalScorer(Player** playerPool, int numPlayers);
 void freePlayerPool(Player **pool, int count);
 void freeArchive(Archive *archive);
 
@@ -45,24 +45,39 @@ int main(void)
     int puzzleTypeCount = 0; // number of puzzle types
     // ofcourse you may need other variables and pointers to complete the tasks.
 
+
+    //Get the puzzle types and return it to a 2D array of strings
     puzzleTypes = readPuzzleTypes(&puzzleTypeCount);
+    Puzzle* puzzle = malloc(puzzleTypeCount * sizeof(Puzzle));
+    for(int i = 0 ; i < puzzleTypeCount ; i++)
+    {
+        puzzle[i].puzzleType = puzzleTypes[i];
+    }
 
 
     int playerCount = 0;
     scanf("%d", &playerCount);
-    Player** playerArray = malloc(playerCount * sizeof(Player*));
-    char* playerName = malloc(50 * sizeof(char));;
+    Player** playerPool = malloc(playerCount * sizeof(Player*));
+    char* playerName = malloc(50 * sizeof(char));
     for(int i = 0 ; i < playerCount ; i++)
     {       
         scanf("%s" , playerName);
-        playerArray[i] = createPlayer(playerName);
+        playerPool[i] = createPlayer(playerName);
 
     }
+    int puzzleCount;
+    
 
-    for(int i = 0 ; i < playerCount ; i++) {printf("player: %s" , playerArray[i]->playerName);}
+    scanf("%d" , &puzzleCount);
+    Archive* archive = createArchive(puzzleCount);
 
-    for(int i = 0 ; i < puzzleTypeCount ; i++) free(puzzleTypes[i]);
-    free(puzzleTypes);
+
+
+
+
+
+
+    free(puzzle);
     return 1;
 
 }
@@ -79,10 +94,12 @@ char **readPuzzleTypes(int *countOut)
 
     scanf("%d" , countOut);
     puzzleType = malloc(*countOut * sizeof(char*));
+    char* puzzleName = malloc(20 * sizeof(char));
     for(int i = 0 ; i < *countOut ; i++) 
     {
-        puzzleType[i] = malloc(100 * sizeof(char));
-        scanf("%s", puzzleType[i]);
+        scanf("%s", puzzleName);
+        puzzleType[i] = malloc(strlen(puzzleName) * sizeof(char));
+        puzzleType[i] = puzzleName;
     }
 
 
@@ -115,7 +132,16 @@ Puzzle structures.
 */
 Archive *createArchive(int puzzleCount)
 {
-    Archive* newArchive;
+    Archive* newArchive = malloc(puzzleCount * sizeof(Archive));
+    int puzzleID , playersInPuzzle;
+    char * puzzleType = malloc(100 * sizeof(char));
+
+    for(int i = 0 ; i < puzzleCount; i++)
+    {
+        scanf("%s %d %d" , puzzleType , &puzzleID , &playersInPuzzle);
+
+    }
+    
     return newArchive;
 }
 
@@ -192,8 +218,9 @@ Postconditions:
 • Displays the player with the highest total score. In case of a tie, the
 player who appears first in the input is considered the top scorer.
 */
-void printMaxTotalScorer(Archive *archive)
+void printMaxTotalScorer(Player** playerPool, int numPlayers)
 {
+
 }
 
 
