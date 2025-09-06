@@ -16,7 +16,15 @@
       "MIMode": "gdb",
       "setupCommands": [
         { "description": "Enable gdb pretty-printing", "text": "-enable-pretty-printing", "ignoreFailures": true }
-      ]
+      ],
+      "preLaunchTask": "build",
+            "linux": {
+                "stdio": [
+                    "${workspaceFolder}/archive04.in",
+                    null,
+                    null
+                ]
+            }
     }
   ]
 }
