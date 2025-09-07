@@ -40,8 +40,11 @@ void printMaxTotalScorer(Player** playerPool, int numPlayers); //used
 void freePlayerPool(Player **pool, int count);//used
 void freeArchive(Archive *archive);//used
 
+//helper functions needed to unbloat main and other functions
 Puzzle* CreatePuzzleArray(int puzzleTypeCount , char** puzzleTypes);
-void PopulatePuzzlesArray(int puzzleTypeCount , Puzzle* puzzles , Player** playerPool , int playerCount, int *puzzlesAttemptedOut);
+Archive*  PopulateArchive(int puzzleTypeCount , char** puzzleTypes , Player** playerPool , int playerCount , int *puzzlesAttemptedOut);
+int ReturnLargerInt(int scoreOne , int scoreTwo);
+void freePuzzleTypes(char **types, int count);
 
 int main(void)
 {
@@ -53,17 +56,19 @@ int main(void)
 
     //Get the puzzle types and return it to a 2D array of strings
     puzzleTypes = readPuzzleTypes(&puzzleTypeCount);
-    Archive* archive = createArchive(puzzleTypeCount);
+    //create the array of puzzle types
     Puzzle* puzzles = CreatePuzzleArray(puzzleTypeCount , puzzleTypes);
-    archive->puzzles = puzzles;
-    archive->puzzleCount = puzzleTypeCount;
 
 
+    //create the player pool of current players in the overall system
     Player** playerPool = readPlayerPool( &playerCount);
 
 
-    PopulatePuzzlesArray(puzzleTypeCount, puzzles , playerPool , playerCount , &puzzlesAttemptedOut);
+    //build the archive of games being played
+    Archive* archive = PopulateArchive(puzzleTypeCount, puzzleTypes, playerPool, playerCount, &puzzlesAttemptedOut);
 
+
+    //Could have refactored this. ran out of time. fine the way it is.
     int numberOfQueries, queryTypeNumber;
     scanf("%d" , &numberOfQueries);
     for(int i = 0 ; i < numberOfQueries ; i++)
@@ -77,6 +82,8 @@ int main(void)
         }
         else
         {
+
+            printf("Top scorer per puzzle:\n"); 
             for (int i = 0 ; i < puzzlesAttemptedOut ; i++)
             {
                 printBestScorer(&archive->puzzles[i]);
@@ -86,57 +93,74 @@ int main(void)
         }
     }
 
-
+    //freeing time;
+    freeArchive(archive);
+    freePlayerPool(playerPool, playerCount);
+    freePuzzleTypes(puzzleTypes, puzzleTypeCount);
     free(puzzles);
     return 1;
 
 }
 
-void PopulatePuzzlesArray(int puzzleTypeCount , Puzzle* puzzles , Player** playerPool , int playerCount , int *puzzlesAttemptedOut)
+//This helper function builds the archive of games being played along with their corresponding players and their scores.
+//Since this excercise is about memory allocation, I juggle pointers around making sure that the correct pointers are being fed
+//to the algorithm so we can keep track of everything that was inputed into the program.
+//FOCUS: don't forget to free everything that is not being used or temporary variables to save from memory leek.
+Archive* PopulateArchive(int puzzleTypeCount , char** puzzleTypes , Player** playerPool , int playerCount , int *puzzlesAttemptedOut)
 {
-
-    char* puzzlePLayed = malloc(MAXSTRINGLENGTH * sizeof(char));
     scanf("%d" , puzzlesAttemptedOut);
-    int puzzleID , puzzlePlayerCount;
-    for(int i = 0 ; i < *puzzlesAttemptedOut ; i++)
-    {
-        char* puzzlePLayed = realloc(puzzlePLayed , MAXSTRINGLENGTH * sizeof(char));
-        getchar();
-        scanf("%s %d %d", puzzlePLayed , &puzzleID, &puzzlePlayerCount);
+    
+    Archive* populatedArchive = createArchive(*puzzlesAttemptedOut);
 
-        for(int j = 0 ; j < puzzleTypeCount ; j ++)
-        {
-            if(!strcmp(puzzles[j].puzzleType, puzzlePLayed))
-            {
-                puzzles[j].puzzleNo = puzzleID;
-                puzzles[j].playerCount = puzzlePlayerCount;
-                puzzles[j].players = malloc(puzzlePlayerCount * sizeof(Player*));
-                puzzles[j].scores = malloc(puzzlePlayerCount * sizeof(int));
+    for (int index = 0; index < *puzzlesAttemptedOut; index++) {
 
-                //Player** puzzlesPlayerPool = malloc(puzzlePlayerCount * sizeof(Player*));
-                char* playerNameThatAttemptedPuzzle = malloc(MAXSTRINGLENGTH * sizeof(char));
-                int theirScore = 0;
-                for(int k = 0 ; k < puzzlePlayerCount ; k++)
-                {
-                    scanf("%s %d" , playerNameThatAttemptedPuzzle , &theirScore);
-                    puzzles[j].players[k] = getPlayerPtrByName(playerPool, playerCount, playerNameThatAttemptedPuzzle);
-                    puzzles[j].players[k]->totalScore += theirScore;
-                    puzzles[j].scores[k] = theirScore;
-                    theirScore = 0;
+        Puzzle *currentPuzzle = &populatedArchive->puzzles[index];
 
-                }
-                free(playerNameThatAttemptedPuzzle);
-                break;
-            }
+        char *puzzlePlayed = malloc(MAXSTRINGLENGTH);
+        int puzzleID, puzzlePlayerCount;
 
+        scanf("%s %d %d", puzzlePlayed, &puzzleID, &puzzlePlayerCount);
+
+        currentPuzzle->puzzleType  = getPuzzleTypePtr(puzzleTypes, puzzleTypeCount, puzzlePlayed);
+        currentPuzzle->puzzleNo    = puzzleID;
+        currentPuzzle->playerCount = puzzlePlayerCount;
+        currentPuzzle->players     = malloc(puzzlePlayerCount * sizeof(Player*));
+        currentPuzzle->scores      = malloc(puzzlePlayerCount * sizeof(int));
+
+        free(puzzlePlayed);
+
+        for (int i = 0; i < puzzlePlayerCount; i++) {
+            char *currentPlayerName = malloc(MAXSTRINGLENGTH);
+            int theirScore = 0;
+
+            // FIX: format string (space-separated)
+            scanf("%s %d", currentPlayerName, &theirScore);
+
+            Player *currentPlayer = getPlayerPtrByName(playerPool, playerCount, currentPlayerName);
+            free(currentPlayerName);
+
+            currentPuzzle->players[i] = currentPlayer;
+            currentPuzzle->scores[i]  = theirScore;
+
+            if (currentPlayer) currentPlayer->totalScore += theirScore;
         }
-        
-        
-
     }
+
+        
+        
+return populatedArchive;    
 
 }
 
+//simply returns the larger of two integers
+int ReturnLargerInt(int scoreOne , int scoreTwo)
+{
+    if(scoreOne > scoreTwo) return scoreOne;
+    return scoreTwo;
+    
+}
+
+//quick helper function that creates the puzzle array
 Puzzle* CreatePuzzleArray(int puzzleTypeCount , char** puzzleTypes)
 {
 
@@ -145,6 +169,9 @@ Puzzle* CreatePuzzleArray(int puzzleTypeCount , char** puzzleTypes)
     for(int i = 0 ; i < puzzleTypeCount ; i++)
     {
         puzzles[i].puzzleType = getPuzzleTypePtr(puzzleTypes , puzzleTypeCount , puzzleTypes[i]);
+        puzzles[i].playerCount = 0;
+        puzzles[i].scores = 0;
+
     }
 
     return puzzles;
@@ -166,11 +193,11 @@ char **readPuzzleTypes(int *countOut)
     for(int i = 0 ; i < *countOut ; i++) 
     {
         scanf("%s", puzzleName);
-        puzzleType[i] = malloc(strlen(puzzleName) * sizeof(char));
+        puzzleType[i] = malloc(strlen(puzzleName) + 1);
         strcpy(puzzleType[i] ,puzzleName);
     }
 
-
+    free(puzzleName);
     return puzzleType;
 }
 
@@ -183,10 +210,11 @@ player's name stored and other properties initialized.
 */
 Player *createPlayer(char *name)
 {
-    Player* player = calloc(1 , sizeof(Player));
+    Player* player = malloc(sizeof(Player));
 
-    player->playerName = realloc(player->playerName , strlen(name) * sizeof(char));
+    player->playerName = malloc((strlen(name)+1) * sizeof(char));
     strcpy(player->playerName, name);
+    player->totalScore = 0;
 
     return player;
 }
@@ -201,6 +229,7 @@ Puzzle structures.
 Archive *createArchive(int puzzleCount)
 {
     Archive* newArchive = malloc(sizeof(Archive));
+    newArchive->puzzles = malloc(puzzleCount * sizeof(Puzzle));
     newArchive->puzzleCount = puzzleCount;
     return newArchive;
 }
@@ -267,7 +296,6 @@ found.
 */
 Player *getPlayerPtrByName(Player **playerPool, int playerCount, char *playerName)
 {
-    Player* player;
 
     for (int i = 0 ; i < playerCount; i++)
     {
@@ -295,10 +323,9 @@ found.
 void printBestScorer(Puzzle *puzzle)
 {
 
-    printf("Top scorer per puzzle:\n"); 
-
     int topScorerPosition = 0;
 
+    if(puzzle->playerCount > 0){
     for(int i = 0 ; i < puzzle->playerCount ; i++)
     {
         if(puzzle->scores[i] > puzzle->scores[topScorerPosition])
@@ -308,8 +335,19 @@ void printBestScorer(Puzzle *puzzle)
         }
         
     }
-    printf("%s#%d %s %d\n" , puzzle->puzzleType , puzzle->puzzleNo , puzzle->players[topScorerPosition]->playerName , puzzle->scores[topScorerPosition]);
-        
+    printf("%s#%d %s %d\n" , 
+        puzzle->puzzleType ,
+         puzzle->puzzleNo , 
+         puzzle->players[topScorerPosition]->playerName , 
+         puzzle->scores[topScorerPosition]);
+    }
+    else
+    {
+        printf("%s#%d No player yet for this puzzle\n" , 
+        puzzle->puzzleType ,
+         puzzle->puzzleNo );
+
+    }
     
 }
 
@@ -367,13 +405,18 @@ Postconditions:
 */
 void freeArchive(Archive *archive)
 {
-    for (int i = 0 ; i < archive->puzzleCount ; i++)
-    {
-        free(archive->puzzles[i].puzzleType);
+    for (int i = 0; i < archive->puzzleCount; i++) {
         free(archive->puzzles[i].scores);
+        free(archive->puzzles[i].players);
     }
-
     free(archive->puzzles);
     free(archive);
 
+}
+
+//simple helper function that frees puzzle types. 
+void freePuzzleTypes(char **types, int count)
+{
+    for (int i = 0; i < count; i++) free(types[i]);
+    free(types);
 }

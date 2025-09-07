@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug archive (pick .in)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/archive",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "externalConsole": true,
+
+      "preLaunchTask": "build",
+
+      "stdio": ["${workspaceFolder}/${input:caseFile}", null, null],
+
+      "setupCommands": [
+        { "text": "-enable-pretty-printing", "description": "Enable pretty printing", "ignoreFailures": true }
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "caseFile",
+      "type": "promptString",
+      "description": "Enter input filename (e.g., archive01.in)",
+      "default": "archive01.in"
+    }
+  ]
+}
