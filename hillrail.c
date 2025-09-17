@@ -68,6 +68,8 @@ int* ConvertCharacterArrayToIntArray(char* characterArray);
 int GetMatrixSize(char* keyFileLocation);
 char* CovertBackToChar(int *encoded , int sizeArray);
 void RainWeightTwo(EncryptedTextStruct* encryptedTextStruct);
+void RainWeightThree(EncryptedTextStruct* encryptedTextStruct);
+void PrintWrappedText(char* text);
 
 int main(int argc , char* argv[])
 {
@@ -134,7 +136,7 @@ char *FormatText(char* plainTextFileLocation , int matrixSize)
 /// @return --> a two dimentional array of keys
 int** FormatMatrix(char* keyFileLocation , int matrixSize)
 {
-    printf("\nKey Matrix: \n");
+    printf("Key matrix: \n");
 
     FILE* keyMatrixFile = fopen(keyFileLocation , "r");    
 
@@ -148,12 +150,11 @@ int** FormatMatrix(char* keyFileLocation , int matrixSize)
     fseek(keyMatrixFile , 1 , SEEK_CUR);
     for(int i = 0 ; i < matrixSize ; i++)
     {
-        printf(" ");
         for(int j = 0 ; j < matrixSize ; j++)
         {       
 
             fscanf(keyMatrixFile , "%d " , &keyMatrixParsed[i][j]);            
-            printf("%d " , keyMatrixParsed[i][j]);
+            printf("%d\t" , keyMatrixParsed[i][j]);
             
         }
         printf("\n");
@@ -177,10 +178,9 @@ HillCipherSecretStruct* BuildHillCipherStruct(char *plainTextFormatted, int **ke
     int padding = (matrixSize - (plainTextSize % matrixSize)) % matrixSize;
     char fillCharacter = 'X';
     char* padded = malloc((plainTextSize + padding + 1) * sizeof(char));
-
     memcpy(padded , plainTextFormatted , plainTextSize);
 
-    if(plainTextSize > 0 && plainTextFormatted[plainTextSize - 1] == 'X') fillCharacter = 'Z';
+    if(padding > 0 && plainTextFormatted[plainTextSize - 1] == 'X') fillCharacter = 'Z';
 
     for(int i = 0 ; i < padding ; i++)
     {
@@ -227,9 +227,38 @@ void RainWeightEncodedText(EncryptedTextStruct *encryptedText, int rainweight)
         break;
     
     case 3 :
-        //RainWeightThree(encryptedText);
+        RainWeightThree(encryptedText);
         break;
     }
+
+
+}
+
+void RainWeightThree(EncryptedTextStruct* encryptedTextStruct)
+{
+    char* encryptedTextReference = encryptedTextStruct->encryptedText;
+    int encryptedArrayLength = strlen(encryptedTextReference);
+
+    char* completedRailCipher = malloc(encryptedArrayLength + 1);
+
+    int mainIndex = 0;
+
+    //4 steps until the first row is written again
+    for (int i = 0 ; i < encryptedArrayLength ; i+=4) completedRailCipher[mainIndex++] = encryptedTextReference[i];
+
+    //middle row (most written!) every 2 steps
+    for(int i = 1 ; i < encryptedArrayLength ; i +=2 ) completedRailCipher[mainIndex++] = encryptedTextReference[i];
+
+    //third row, least written. every four steps
+    for(int i = 2 ; i < encryptedArrayLength ; i+=4) completedRailCipher[mainIndex++] = encryptedTextReference[i];
+
+    completedRailCipher[mainIndex] = '\0';
+
+    free(encryptedTextStruct->encryptedText);
+    encryptedTextStruct->encryptedText = completedRailCipher;
+
+    
+
 
 
 }
@@ -280,19 +309,19 @@ EncryptedTextStruct* EncryptText(char *plainTextFileLocation, char *keyFileLocat
     int **keyMatrix = FormatMatrix(keyFileLocation, matrixSize);
 
 
+    printf("\nPlaintext:\n");
+    PrintWrappedText(plainText);
     HillCipherSecretStruct* hillCipherStruct = BuildHillCipherStruct(plainText , keyMatrix , matrixSize);
 
     free(plainText);
 
-    printf("\nPlainText:\n");
-    printf("%s" , hillCipherStruct->plainTextFormated);
 
-    printf("\n\nCipherText:\n");
+    printf("\n\nCiphertext:\n");
     EncryptedTextStruct* finalCipherStruct = PerformHillCipherEncryption(hillCipherStruct);
     RainWeightEncodedText(finalCipherStruct , rainweight);
-    printf("%s\n" , finalCipherStruct->encryptedText);
+    PrintWrappedText(finalCipherStruct->encryptedText);
 
-    printf("\nDepth: %d\n" , rainweight);
+    printf("\n\nDepth: %d\n" , rainweight);
 
 
     for(int i = 0 ; i < matrixSize; i++) free(keyMatrix[i]);
@@ -316,6 +345,26 @@ int GetMatrixSize(char* keyFileLocation)
 
     return matrixSize;
 
+
+}
+
+void PrintWrappedText(char* text)
+{
+    int column = 0;
+    int stringLength = strlen(text);
+
+    for(int i = 0 ; i < stringLength ; i++ )
+    {
+
+        if(column == 80)
+        {
+            putchar('\n');
+            column = 0;
+        }
+        putchar(text[i]);
+        column++;
+
+    }
 
 }
 
