@@ -6,6 +6,7 @@ typedef struct spellingbee
 {
     char* lettersInGame;
     char requiredLetter;
+
 }spellingbee;
 
 typedef struct validWordsStruct
@@ -17,34 +18,86 @@ typedef struct validWordsStruct
 }validWordsStruct;
 
 spellingbee* BuildSpellingBeeStruct(char* spellingbeeLetters);
-validWordsStruct* PlayGame(int wordCount , spellingbee* spellingbeeStructPointer);
+
+char** PlayGame(int wordCount);
 char* SortAlphabetical(char* wordToBeSorted);
-validWordsStruct* AddToLinkedList( validWordsStruct* validWordStruct , char* wordToBeChecked , spellingbee* spellingbeeStructPointer);
+
+validWordsStruct* AddToLinkedList( validWordsStruct* validWordStruct , char* wordToBeChecked);
 validWordsStruct* NodeFactory(char* wordToBeChecked);
-validWordsStruct* CheckWordValidity(validWordsStruct* validWords, spellingbee* spellingbeeStructPointer);
-int CheckForSpecialCharacter(validWordsStruct* temporary , char specialCharacter);
-void printLinkedList(validWordsStruct* validWords);
+validWordsStruct* CheckWordValidity(char** validWords, spellingbee* spellingbeeStructPointer , int wordCount);
+
+int binsearch(char** words, int begginingOfSearch, int endOfSearch, char* target);
+
+void ValidCandidates(char* spellingbeeWord, char requiredCharacter, int used[7], char* buffer, int depth, char** validWords, int dictionarySize, validWordsStruct** outHeadNode);
+void PrintResult(validWordsStruct* validWords);
 
 int main()
 {
     int wordCount = 0;
     char* spellingbeeLetters = malloc(51 * sizeof(char));
     scanf("%s" , spellingbeeLetters);
+
+    spellingbee* spellingbeeStructPointer = BuildSpellingBeeStruct(spellingbeeLetters); 
+
     spellingbeeLetters = SortAlphabetical(spellingbeeLetters);
 
-    spellingbee* spellingbeeStructPointer = BuildSpellingBeeStruct(spellingbeeLetters);    
+    strcpy(spellingbeeStructPointer->lettersInGame , spellingbeeLetters);
+
+    
+    
+    free(spellingbeeLetters);
 
     scanf("%d" , &wordCount);
-    validWordsStruct* validWords = PlayGame(wordCount , spellingbeeStructPointer);
+    char** validWords = PlayGame(wordCount);
 
 
-    printLinkedList(CheckWordValidity(validWords, spellingbeeStructPointer));
+    PrintResult(CheckWordValidity(validWords, spellingbeeStructPointer, wordCount));
 
-
-    printf("\n");
     
 
     return 0;
+
+}
+
+void ValidCandidates(char* spellingbeeWord, char requiredCharacter, int used[7], char* buffer, int depth, char** validWords, int dictionarySize, validWordsStruct** outHeadNode)
+{
+    buffer[depth] = '\0';
+
+    int hasRequiredCharacter = 0;
+
+    for(int i = 0; i < depth ; i++)
+    {
+        if(buffer[i] == requiredCharacter)
+        {
+            hasRequiredCharacter = 1;
+            break;
+        }
+
+
+    }
+
+    if(depth >= 4 && depth<= 7 && hasRequiredCharacter)
+    {
+        if(binsearch(validWords , 0 , dictionarySize - 1, buffer) >= 0)
+        {
+            *outHeadNode = AddToLinkedList(*outHeadNode, buffer);
+
+        }
+    }
+
+    if(depth == 7){return;}
+
+    for(int i = 0 ; i < 7 ; i++)
+    {
+
+        if (used[i]) {continue;}
+
+        used[i] = 1;
+        buffer[depth] = spellingbeeWord[i];
+        ValidCandidates(spellingbeeWord , requiredCharacter , used , buffer , depth + 1 , validWords , dictionarySize , outHeadNode);
+        used[i] = 0;
+    }
+
 
 }
 
@@ -74,37 +127,28 @@ int binsearch(char** words, int begginingOfSearch, int endOfSearch, char* target
 }
 
 //helper function that uses recursion to print out each node in our linked list.
-void printLinkedList(validWordsStruct* validWordsStructPointer)
+void PrintResult(validWordsStruct* validWordsStructPointer)
 {
         if(!validWordsStructPointer) return;
-        printf("\t%s\n" , validWordsStructPointer->validWord);
-        printLinkedList(validWordsStructPointer->next);
+        printf("%s\n" , validWordsStructPointer->validWord);
+        PrintResult(validWordsStructPointer->next);
 
         
 }
-validWordsStruct* CheckWordValidity(validWordsStruct* validWords, spellingbee* spellingBeeStruct)
+
+
+validWordsStruct* CheckWordValidity(char** validWords, spellingbee* spellingBeeStruct , int wordCount)
 {
-    validWordsStruct* validWordStructLinkedList;
+    char* spelligbeeWord = spellingBeeStruct->lettersInGame;
+    int used[7] = {0};
+    char buffer[8];
+    
+    validWordsStruct* headNode = NULL;
 
-    validWordsStruct* head = validWords;
-    while(validWords->next != NULL)
-    {
-        validWordsStruct* temporary = validWords;
-
-        if(CheckForSpecialCharacter(temporary , spellingBeeStruct->lettersInGame[3]))
-        {
-
-        }
-        else
-        {
-            
-
-        }
-
-    }
+    ValidCandidates(spelligbeeWord, spellingBeeStruct->requiredLetter , used, buffer , 0 , validWords , wordCount , &headNode);
 
 
-    return validWordStructLinkedList;
+    return headNode;
 }
 
 //sorts a string into alphabetical order.
@@ -135,42 +179,21 @@ char* SortAlphabetical(char* wordToBeSorted)
 }
 
 
-//simple helper function that returns 1(True) if the special spellingbee character is in the string and 0(if its not)
-int CheckForSpecialCharacter(validWordsStruct* temporary , char specialCharacter)
+
+char** PlayGame(int wordCount)
 {
-    for(int i = 0 ; i < strlen(temporary->validWord) ; i++)
-    {
-        if(temporary->validWord[i] == specialCharacter) return 1;
-
-    }
-
-    return 0;
-}
-
-//takes in a number of how many words in the game and the struct to the pellingbee characters(already sorted) to pass to a 
-//helper function. 
-//this function is just to return the already built final answer to our problem.
-validWordsStruct* PlayGame(int wordCount , spellingbee* spellingbeeStructPointer)
-{
-    validWordsStruct* validWordsLinkedList = NULL;
-
-    char* wordToBeChecked = malloc(51 * sizeof(char));
-
     if(wordCount < 1) return NULL;
 
-    while(wordCount > 0)
-    {
-        scanf("%s" , wordToBeChecked);
-
-        validWordsLinkedList = AddToLinkedList(validWordsLinkedList , wordToBeChecked , spellingbeeStructPointer);
-
-        wordCount--;
-
-        
+    char** wordsInGame = malloc(wordCount * sizeof(char*));
+    
+    for(int i = 0 ; i < wordCount; i++){
+        char buffer[51];
+        scanf("%50s" , buffer);
+        wordsInGame[i] = malloc(strlen(buffer) + 1);
+        strcpy(wordsInGame[i] , buffer);
     }
-
-    free(wordToBeChecked);
-    return validWordsLinkedList;
+    
+    return wordsInGame;
 
 }
 
@@ -180,7 +203,6 @@ spellingbee* BuildSpellingBeeStruct(char* spellingbeeLetters)
     spellingbee* spellingbeeStructPointer = malloc(sizeof(spellingbee));
 
     spellingbeeStructPointer->lettersInGame = malloc(strlen(spellingbeeLetters) + 1);
-    strcpy(spellingbeeStructPointer->lettersInGame , spellingbeeLetters);
 
     spellingbeeStructPointer->requiredLetter = spellingbeeLetters[3];
 
@@ -202,7 +224,7 @@ validWordsStruct* NodeFactory(char* wordToBeChecked)
 
 //takes in some parameters to append to the end of the linked list, maintaining the original order of 
 //the input to the program(already in alphabetical order!)
-validWordsStruct* AddToLinkedList(validWordsStruct* validWordStructPointer , char* wordToBeChecked, spellingbee* spellingbeeStructPointer)
+validWordsStruct* AddToLinkedList(validWordsStruct* validWordStructPointer , char* wordToBeChecked)
 {
         validWordsStruct* newNode = NodeFactory(wordToBeChecked);
 
