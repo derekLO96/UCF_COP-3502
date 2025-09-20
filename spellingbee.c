@@ -37,6 +37,7 @@ int binsearch(char** words, int begginingOfSearch, int endOfSearch, char* target
 void ValidCandidates(char* spellingbeeWord, char requiredCharacter, int used[7], char* buffer, int depth, char** validWords, int dictionarySize, validWordsStruct** outHeadNode);
 void PrintResult(validWordsStruct* validWords);
 void FreeSpellingBeeStuct(spellingbeeStruct* spellingbeeStructPointer);
+void FreeArray(char** validWords, int wordCount);
 
 int main()
 {
@@ -60,12 +61,18 @@ int main()
 
     PrintResult(CheckWordValidity(validWords, spellingbeeStructPointer, wordCount));//recursively print the struct result.
 
-    
+    FreeArray(validWords , wordCount);
     FreeSpellingBeeStuct(spellingbeeStructPointer); //free the spellingbee struct
     return 0;
 
 }
 
+void FreeArray(char** validWords , int wordCount)
+{
+    for(int i = 0 ; i < wordCount ; i++) {free(validWords[i]);}
+    free(validWords);
+
+}
 //helper function to free the spellingbeeStruct in full
 void FreeSpellingBeeStuct(spellingbeeStruct* spellingbeeStructPointer)
 {
@@ -157,13 +164,13 @@ int binsearch(char** words, int begginingOfSearch, int endOfSearch, char* target
         return middleOfSearch;
 }
 
-//helper function that uses recursion to print out each node in our linked list.
+//helper function that uses recursion to print out and free each node in our linked list.
 void PrintResult(validWordsStruct* validWordsStructPointer)
 {
         if(!validWordsStructPointer) return;
         printf("%s\n" , validWordsStructPointer->validWord);
         PrintResult(validWordsStructPointer->next);
-
+        free(validWordsStructPointer);//we don't need the node anymore
         
 }
 
